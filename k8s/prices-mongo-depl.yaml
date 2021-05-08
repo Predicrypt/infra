@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prices-mongo-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prices-mongo
+  template:
+    metadata:
+      labels:
+        app: prices-mongo
+    spec:
+      containers:
+        - name: prices-mongo
+          image: mongo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prices-mongo-srv
+spec:
+  selector:
+    app: prices-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
