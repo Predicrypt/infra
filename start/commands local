@@ -1,0 +1,15 @@
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/cloud/deploy.yaml
+minikube addons enable ingress
+
+# Clone git repository and execute this command for KubeFlow
+git clone https://github.com/kubeflow/manifests.git
+while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+
+
+kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=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
+kubectl create secret generic jwt-secret --from-literal=JWT_KEY=123
+
+# Acceder KubeFlow UI web  (http://localhost:8080)
+kubectl port-forward svc/istio-ingressgateway -n istio-system 8080:80
+user=user@example.com
+password=12341234

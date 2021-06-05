@@ -24,4 +24,12 @@ spec:
           - path: /orders/?(.*)
             backend:
               serviceName: orders-srv
+              servicePort: 3000
+          - path: /users/?(.*)
+            backend:
+              serviceName: users-srv
               servicePort: 3000    
+          - path: /?(.*)
+            backend:
+              serviceName: front-srv
+              servicePort: 4200    
