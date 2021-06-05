@@ -5,6 +5,9 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/websocket-services: prices-srv
 spec:
   rules:
     - host: predicrypt.com
@@ -14,7 +17,11 @@ spec:
             backend:
               serviceName: auth-srv
               servicePort: 3000
-          - path: /?(.*)
+          - path: /prices/?(.*)
             backend:
-              serviceName: client-srv
+              serviceName: prices-srv
               servicePort: 3000
+          - path: /orders/?(.*)
+            backend:
+              serviceName: orders-srv
+              servicePort: 3000    
