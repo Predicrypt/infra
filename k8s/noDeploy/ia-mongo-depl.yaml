@@ -1,30 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: front-depl
+  name: ia-mongo-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: front
+      app: ia-mongo
   template:
     metadata:
       labels:
-        app: front
+        app: ia-mongo
     spec:
       containers:
-        - name: front
-          image: predicrypt/front
+        - name: ia-mongo
+          image: mongo
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: front-srv
+  name: ia-mongo-srv
 spec:
   selector:
-    app: front
+    app: ia-mongo
   ports:
-    - name: front
+    - name: db
       protocol: TCP
-      port: 80
-      targetPort: 80
+      port: 27017
+      targetPort: 27017

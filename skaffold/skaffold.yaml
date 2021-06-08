@@ -38,4 +38,24 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
+    - image: predicrypt/users
+      context: ../../users-service
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          GITHUB_TOKEN: "{{.GITHUB_TOKEN}}"
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .
 
+    - image: predicrypt/front
+      context: ../../front
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          GITHUB_TOKEN: "{{.GITHUB_TOKEN}}"
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: .

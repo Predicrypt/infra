@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ia-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ia
+  template:
+    metadata:
+      labels:
+        app: ia
+    spec:
+      containers:
+        - name: ia
+          image: predicrypt/ia
+          env:
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /home/alex/Downloads/predicrypt-7f98b2a41dbe.json
+      volumes: 
+        - name:  storage
+          hostPath:
+            path: /home/alex/Downloads/predicrypt-7f98b2a41dbe.json
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ia-srv
+spec:
+  selector:
+    app: ia
+  ports:
+    - name: ia
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

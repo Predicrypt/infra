@@ -1,15 +1,95 @@
+# Ingress nginx
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/cloud/deploy.yaml
 minikube addons enable ingress
-
-# Clone git repository and execute this command for KubeFlow
-git clone https://github.com/kubeflow/manifests.git
-while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-
 
 kubectl create secret generic github-token --from-literal=GITHUB_TOKEN=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
 kubectl create secret generic jwt-secret --from-literal=JWT_KEY=123
 
+# Clone git repository and execute this command for KubeFlow
+git clone https://github.com/kubeflow/manifests.git
+    # All in one command
+    while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+
+    # Single commands no all components
+    - cert-manager
+    kustomize build common/cert-manager/cert-manager-kube-system-resources/base | kubectl apply -f -
+    kustomize build common/cert-manager/cert-manager-crds/base | kubectl apply -f -
+    kustomize build common/cert-manager/cert-manager/overlays/self-signed | kubectl apply -f -
+
+    - istio 
+    kustomize build common/istio-1-9-0/istio-crds/base | kubectl apply -f -
+    kustomize build common/istio-1-9-0/istio-namespace/base | kubectl apply -f -
+    kustomize build common/istio-1-9-0/istio-install/base | kubectl apply -f -
+
+    - Dex
+    kustomize build common/dex/overlays/istio | kubectl apply -f -
+
+    - OIDC Auth Service
+    kustomize build common/oidc-authservice/base | kubectl apply -f -
+
+    - Knative
+    kustomize build common/knative/knative-serving-crds/base | kubectl apply -f -
+    kustomize build common/knative/knative-serving-install/base | kubectl apply -f -
+    kustomize build common/istio-1-9-0/cluster-local-gateway/base | kubectl apply -f -
+
+    - Kubeflow namespace
+    kustomize build common/kubeflow-namespace/base | kubectl apply -f -
+
+    -Istio resources
+    kustomize build common/istio-1-9-0/kubeflow-istio-resources/base | kubectl apply -f -
+
+
+    -Kubeflow pipelines
+    kustomize build apps/pipeline/upstream/env/platform-agnostic-multi-user | kubectl apply -f -
+
+    - KFServing
+    kustomize build apps/kfserving/upstream/overlays/kubeflow | kubectl apply -f -
+
+    - Katib
+    kustomize build apps/katib/upstream/installs/katib-with-kubeflow | kubectl apply -f -
+
+    - Central dashboard 
+    kustomize build apps/centraldashboard/upstream/overlays/istio | kubectl apply -f -
+
+    - Volumes Web App 
+    kustomize build apps/volumes-web-app/upstream/overlays/istio | kubectl apply -f -
+
+    - TFJobOperator 
+    kustomize build apps/tf-training/upstream/overlays/kubeflow | kubectl apply -f -
+
+    - User Namespace 
+    kustomize build common/user-namespace/base | kubectl apply -f -
+
+
+
+
 # Acceder KubeFlow UI web  (http://localhost:8080)
 kubectl port-forward svc/istio-ingressgateway -n istio-system 8080:80
-user=user@example.com
-password=12341234
+user=user@example.com || alex@test.com
+password=12341234 || test
+
+# Ver que todo este running
+kubectl get pods -n cert-manager
+kubectl get pods -n istio-system
+kubectl get pods -n auth
+kubectl get pods -n knative-eventing
+kubectl get pods -n knative-serving
+kubectl get pods -n kubeflow
+kubectl get pods -n kubeflow-user-example-com
+
+# Instalar drivers Nvidia
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/521205d4de2a4a4eaf7259b27bc2290c823d857c/nvidia-driver-installer/cos/daemonset-preloaded.yaml
+kubectl apply -f infra/k8s/noDeploy/tensorflow-gpu.yaml 
+
+# Instalar KFServing (https://github.com/kubeflow/kfserving)
+kubectl apply -f https://github.com/kubeflow/kfserving/releases/download/$TAG/kfserving.yaml
+
+    # Install Knative Serving 
+    kubectl apply -f https://github.com/knative/serving/releases/download/v0.22.0/serving-crds.yaml
+    kubectl apply -f https://github.com/knative/serving/releases/download/v0.22.0/serving-core.yaml
+    kubectl apply -f https://github.com/knative/net-kourier/releases/download/v0.22.0/kourier.yaml
+    kubectl patch configmap/config-network \
+  --namespace knative-serving \
+  --type merge \
+  --patch '{"data":{"ingress.class":"kourier.ingress.networking.knative.dev"}}'
+
